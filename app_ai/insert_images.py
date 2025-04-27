@@ -1,23 +1,24 @@
 # 导入所需的库
-from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility # Milvus 客户端库
-import numpy as np # 用于数值计算
-from resnet import extract_features # 从自定义的 resnet 模块导入特征提取函数
-import os # 用于操作系统相关操作，如路径处理
-import hashlib # 用于计算文件哈希值
+from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility  # Milvus 客户端库
+import numpy as np  # 用于数值计算
+from resnet import extract_features  # 从自定义的 resnet 模块导入特征提取函数
+import os  # 用于操作系统相关操作，如路径处理
+import hashlib  # 用于计算文件哈希值
 
 # --- Milvus 连接配置 ---
 # 使用别名 "default" 连接到本地运行的 Milvus 实例
 connections.connect(
-    alias="default", # 连接别名
-    host='localhost', # Milvus 服务器地址
-    port='19530' # Milvus 服务器端口
+    alias="default",  # 连接别名
+    host='localhost',  # Milvus 服务器地址
+    port='19530'  # Milvus 服务器端口
 )
 
 # --- Milvus 集合 Schema 定义 ---
 # 定义集合中每个字段的模式
 fields = [
     # 主键字段：INT64 类型，自动生成 ID
-    FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+    FieldSchema(name="id", dtype=DataType.INT64, is_primary=True,
+                auto_id=True),
     # 嵌入向量字段：FLOAT_VECTOR 类型，维度为 512 (由 ResNet18 模型决定)
     FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=512),
     # 图像文件名字段：VARCHAR 类型，最大长度 255
@@ -31,26 +32,29 @@ schema = CollectionSchema(fields=fields, description="非遗图像特征向量�
 collection_name = "intangible_cultural_heritage_images"
 
 # --- 初始化或获取 Milvus 集合对象 ---
-collection = None # 先将集合对象初始化为 None
+collection = None  # 先将集合对象初始化为 None
 # 检查指定名称的集合是否存在
 if not utility.has_collection(collection_name):
     # 如果集合不存在，打印提示信息并创建新集合
     print(f"集合 {collection_name} 不存在，正在创建...")
-    collection = Collection(name=collection_name, schema=schema) # 使用定义的 Schema 创建集合
+    collection = Collection(name=collection_name,
+                            schema=schema)  # 使用定义的 Schema 创建集合
     # --- 为新创建的集合创建索引 ---
     print(f"为新集合 {collection_name} 创建索引...")
     # 定义索引参数：使用 L2 距离度量，索引类型为 IVF_FLAT，聚类数量为 1024
     index_params = {
-        "metric_type": "L2", # 距离度量类型
-        "index_type": "IVF_FLAT", # 索引类型
-        "params": {"nlist": 1024} # 索引参数，nlist 是聚类中心的数量
+        "metric_type": "L2",  # 距离度量类型
+        "index_type": "IVF_FLAT",  # 索引类型
+        "params": {
+            "nlist": 1024
+        }  # 索引参数，nlist 是聚类中心的数量
     }
     # 在 "embedding" 字段上创建索引
     collection.create_index(
-        field_name="embedding", # 需要创建索引的字段名
-        index_params=index_params # 索引参数
+        field_name="embedding",  # 需要创建索引的字段名
+        index_params=index_params  # 索引参数
     )
-    print(f"已为新集合创建索引 {index_params['index_type']}") # 打印索引创建成功的提示
+    print(f"已为新集合创建索引 {index_params['index_type']}")  # 打印索引创建成功的提示
     # --- 创建索引结束 ---
 else:
     # 如果集合已存在，获取现有集合对象
@@ -65,14 +69,14 @@ else:
         index_params = {
             "metric_type": "L2",
             "index_type": "IVF_FLAT",
-            "params": {"nlist": 1024}
+            "params": {
+                "nlist": 1024
+            }
         }
         # 在 "embedding" 字段上创建索引
-        collection.create_index(
-            field_name="embedding",
-            index_params=index_params
-        )
-        print(f"已为现有集合创建索引 {index_params['index_type']}") # 打印索引创建成功的提示
+        collection.create_index(field_name="embedding",
+                                index_params=index_params)
+        print(f"已为现有集合创建索引 {index_params['index_type']}")  # 打印索引创建成功的提示
     # --- 索引检查结束 ---
 
 # --- 检查集合是否为空 ---
@@ -82,6 +86,7 @@ if collection and collection.num_entities > 0:
     print(f"警告：集合中已有 {collection.num_entities} 条数据，继续操作将会追加新数据")
 
 # --- 全局函数定义 ---
+
 
 # 计算图像文件的 MD5 哈希值
 def calculate_image_hash(image_path):
@@ -101,6 +106,7 @@ def calculate_image_hash(image_path):
     # 返回计算得到的哈希值
     return file_hash
 
+
 # 检查图像是否已存在于 Milvus 集合中 (基于文件名和哈希值)
 def is_image_exists(image_filename, image_hash):
     """
@@ -118,11 +124,12 @@ def is_image_exists(image_filename, image_hash):
     expr = f'image_filename == "{image_filename}" or image_hash == "{image_hash}"'
     # 执行查询，指定查询表达式和需要输出的字段
     results = collection.query(
-        expr=expr, # 查询条件表达式
-        output_fields=["id", "image_filename"] # 指定返回结果中包含的字段
+        expr=expr,  # 查询条件表达式
+        output_fields=["id", "image_filename"]  # 指定返回结果中包含的字段
     )
     # 如果查询结果列表不为空 (即找到匹配记录)，则表示图像已存在
     return len(results) > 0
+
 
 # 向 Milvus 集合插入图像特征向量、文件名和哈希值
 def insert_vectors(vectors, image_paths):
@@ -137,24 +144,26 @@ def insert_vectors(vectors, image_paths):
     # 检查输入的向量列表和路径列表长度是否一致
     if len(vectors) != len(image_paths):
         print("错误：向量数量与图像路径数量不匹配")
-        return # 如果不匹配则直接返回
+        return  # 如果不匹配则直接返回
 
     # --- 准备插入数据 ---
     # 将 numpy 数组转换为列表 (如果需要)，因为 Milvus Python SDK 通常接受列表格式
-    embeddings = [v.tolist() for v in vectors] if isinstance(vectors[0], np.ndarray) else vectors
+    embeddings = [v.tolist() for v in vectors] if isinstance(
+        vectors[0], np.ndarray) else vectors
     # 从完整路径中提取文件名
     image_filenames = [os.path.basename(path) for path in image_paths]
     # 计算每个图像文件的哈希值
     image_hashes = [calculate_image_hash(path) for path in image_paths]
 
     # --- 检查重复并筛选需要插入的数据 ---
-    new_embeddings = [] # 存储新的特征向量
-    new_filenames = [] # 存储新的文件名
-    new_hashes = [] # 存储新的哈希值
-    skipped_count = 0 # 记录跳过的重复图像数量
+    new_embeddings = []  # 存储新的特征向量
+    new_filenames = []  # 存储新的文件名
+    new_hashes = []  # 存储新的哈希值
+    skipped_count = 0  # 记录跳过的重复图像数量
 
     # 遍历每个待处理的图像信息
-    for i, (embedding, filename, hash_value) in enumerate(zip(embeddings, image_filenames, image_hashes)):
+    for i, (embedding, filename, hash_value) in enumerate(
+            zip(embeddings, image_filenames, image_hashes)):
         # 调用 is_image_exists 函数检查图像是否已存在
         if is_image_exists(filename, hash_value):
             # 如果已存在，打印跳过信息并增加计数器
@@ -172,8 +181,8 @@ def insert_vectors(vectors, image_paths):
         # 准备插入的数据列表，顺序与 Schema 定义一致
         data_to_insert = [
             new_embeddings,  # 特征向量字段数据
-            new_filenames,   # 图像文件名字段数据
-            new_hashes       # 图像哈希字段数据
+            new_filenames,  # 图像文件名字段数据
+            new_hashes  # 图像哈希字段数据
         ]
         # 调用 collection.insert() 方法执行插入
         collection.insert(data_to_insert)
@@ -186,13 +195,14 @@ def insert_vectors(vectors, image_paths):
         # 如果没有新图像需要插入，打印提示信息
         print(f"未插入任何新向量，所有 {skipped_count} 个图像已存在")
 
+
 # --- 主程序入口 ---
 if __name__ == "__main__":
     # --- 配置区 ---
     # 设置图片所在的目录路径 (请根据实际情况修改为你本地的路径)
-    IMAGE_DIRECTORY = "D:\\Code\\heritage\\app_ai\\images"
+    IMAGE_DIRECTORY = "D:\\Code\\heritage\\app_ai\\static\\images"
     # 设置是否强制重新创建集合 (True: 删除旧集合并创建新的, False: 使用现有集合或创建新集合)
-    FORCE_RECREATE_COLLECTION = False # 正常运行时设为 False，需要清空并重建时改为 True
+    FORCE_RECREATE_COLLECTION = False  # 正常运行时设为 False，需要清空并重建时改为 True
     # --- 配置区结束 ---
 
     # --- 处理强制重建集合的逻辑 ---
@@ -211,13 +221,13 @@ if __name__ == "__main__":
         index_params = {
             "metric_type": "L2",
             "index_type": "IVF_FLAT",
-            "params": {"nlist": 1024}
+            "params": {
+                "nlist": 1024
+            }
         }
         # 创建索引
-        collection.create_index(
-            field_name="embedding",
-            index_params=index_params
-        )
+        collection.create_index(field_name="embedding",
+                                index_params=index_params)
         print(f"已为新集合创建索引 {index_params['index_type']}")
         # 加载新创建并已建立索引的集合到内存，准备进行查询和插入
         print(f"加载新集合 {collection_name}...")
@@ -228,23 +238,26 @@ if __name__ == "__main__":
         # --- 如果不是强制重建模式 ---
         # 检查在脚本开头获取的 collection 对象是否有效
         if collection:
-             # 加载现有集合到内存
-             print(f"加载现有集合 {collection_name}...")
-             collection.load()
-             print(f"现有集合 {collection_name} 加载完成")
+            # 加载现有集合到内存
+            print(f"加载现有集合 {collection_name}...")
+            collection.load()
+            print(f"现有集合 {collection_name} 加载完成")
         else:
-             # 如果 collection 对象无效 (可能在脚本开头获取失败)，打印错误并退出
-             print(f"错误：无法获取集合对象 {collection_name}")
-             exit() # 退出脚本
+            # 如果 collection 对象无效 (可能在脚本开头获取失败)，打印错误并退出
+            print(f"错误：无法获取集合对象 {collection_name}")
+            exit()  # 退出脚本
 
     # --- 处理指定目录下的所有图片 ---
-    image_dir = IMAGE_DIRECTORY # 使用配置中指定的图片目录
-    all_vectors = [] # 用于存储所有提取到的特征向量
-    all_image_paths = [] # 用于存储所有处理的图片的完整路径
+    image_dir = IMAGE_DIRECTORY  # 使用配置中指定的图片目录
+    all_vectors = []  # 用于存储所有提取到的特征向量
+    all_image_paths = []  # 用于存储所有处理的图片的完整路径
 
     # 获取目录下所有符合条件的图片文件列表 (png, jpg, jpeg, webp)
-    image_files = [f for f in os.listdir(image_dir)
-                   if os.path.isfile(os.path.join(image_dir, f)) and f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))] # 添加 .webp 后缀
+    image_files = [
+        f for f in os.listdir(image_dir)
+        if os.path.isfile(os.path.join(image_dir, f)) and f.lower().endswith((
+            '.png', '.jpg', '.jpeg', '.webp'))
+    ]  # 添加 .webp 后缀
 
     # 检查是否找到了图片文件
     if not image_files:
@@ -274,7 +287,7 @@ if __name__ == "__main__":
             # 如果提取到了向量，打印提示并调用 insert_vectors 函数进行插入
             print(f"正在向Milvus插入 {len(all_vectors)} 个特征向量...")
             insert_vectors(all_vectors, all_image_paths)
-            print("插入完成") # 打印插入操作完成的提示
+            print("插入完成")  # 打印插入操作完成的提示
         else:
             # 如果未能成功提取任何特征，打印提示
             print("未能成功提取任何特征")

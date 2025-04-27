@@ -122,7 +122,3 @@ if __name__ == "__main__":
     # 捕获其他可能发生的异常 (如 Milvus 连接问题、特征提取失败等)
     except Exception as e:
         print(f"搜索过程中发生错误：{e}")
-
-# 注意：文件末尾这行 collection_name = "..." 是多余的，已在前面定义，可以安全删除。
-# (在原始代码中存在，这里保留注释说明)
-# collection_name = "intangible_cultural_heritage_images"

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>相似度搜索结果</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+        background-color: #f4f4f4;
+        color: #333;
+      }
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1,
+      h2 {
+        text-align: center;
+        color: #0056b3;
+        margin-bottom: 20px;
+      }
+      .query-section,
+      .results-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+      }
+      .query-image-container {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      .query-image-container img {
+        max-width: 300px;
+        max-height: 300px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+      }
+      .result-item {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        text-align: center;
+        background-color: #f9f9f9;
+      }
+      .result-item img {
+        max-width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+      .result-item p {
+        margin: 5px 0;
+        font-size: 0.9em;
+        word-wrap: break-word;
+      }
+      .result-item .filename {
+        font-weight: bold;
+        color: #555;
+      }
+      .result-item .distance {
+        color: #888;
+      }
+      .no-results {
+        text-align: center;
+        color: #777;
+        font-style: italic;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 30px;
+      }
+      .back-link a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .back-link a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>相似度搜索结果</h1>
+
+      <div class="query-section">
+        <h2>查询图片: {{ query_filename }}</h2>
+        <div class="query-image-container">
+          <img src="/static/uploads/{{ query_filename }}" alt="查询图片" />
+        </div>
+      </div>
+
+      <div class="results-section">
+        <h2>相似图片结果</h2>
+        {% if results %}
+        <div class="results-grid">
+          {% for result in results %}
+          <div class="result-item">
+            <img src="{{ result.image_url }}" alt="{{ result.filename }}" />
+            <p class="filename">{{ result.filename }}</p>
+            <p class="distance">距离: {{ result.distance }}</p>
+            <p class="similarity">
+              相似度: {{ ((1 - result.distance|float) * 100)|round(2) }}%
+            </p>
+            <!-- 可以添加其他信息，如 ID: result.id -->
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-results">未找到相似的图片。</p>
+        {% endif %}
+      </div>
+
+      <div class="back-link">
+        <a href="{{ url_for('upload_form') }}">返回上传页面</a>
+      </div>
+    </div>
+  </body>
+</html>
