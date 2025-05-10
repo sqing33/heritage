@@ -9,7 +9,7 @@ import hashlib  # 用于计算文件哈希值
 # 使用别名 "default" 连接到本地运行的 Milvus 实例
 connections.connect(
     alias="default",  # 连接别名
-    host='localhost',  # Milvus 服务器地址
+    host='192.168.1.100',  # Milvus 服务器地址
     port='19530'  # Milvus 服务器端口
 )
 

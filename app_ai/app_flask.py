@@ -27,7 +27,9 @@ collection = None  # 初始化 collection 变量
 try:
     # 检查是否已存在连接，如果不存在则创建
     if not connections.has_connection("default"):
-        connections.connect(alias="default", host='localhost', port='19530')
+        connections.connect(alias="default",
+                            host='192.168.1.100',
+                            port='19530')
         print("成功连接到 Milvus。")
     else:
         print("已存在 Milvus 连接。")
