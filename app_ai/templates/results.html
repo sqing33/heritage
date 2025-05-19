@@ -31,15 +31,25 @@
         padding-bottom: 20px;
         border-bottom: 1px solid #eee;
       }
+      .results-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        max-height: 500px;
+        overflow-y: auto;
+      }
       .query-image-container {
         text-align: center;
         margin-bottom: 15px;
       }
       .query-image-container img {
-        max-width: 300px;
         max-height: 300px;
+        height: 300px;
+        width: auto;
         border: 1px solid #ddd;
         border-radius: 4px;
+        display: block;
+        margin: 0 auto;
       }
       .results-grid {
         display: grid;
@@ -54,11 +64,15 @@
         background-color: #f9f9f9;
       }
       .result-item img {
-        max-width: 100%;
+        max-height: 150px;
         height: 150px;
-        object-fit: cover;
+        width: auto;
+        object-fit: contain;
         border-radius: 4px;
         margin-bottom: 10px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
       }
       .result-item p {
         margin: 5px 0;

@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "start vue",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/admin_vue/",
+      "command": "npm run dev -- --host 0.0.0.0",
+      "serverReadyAction": {
+        "pattern": "Local:   http://localhost:([0-9]+)", // 匹配项目启动日志中的端口号
+        "uriFormat": "http://localhost:%s", // 动态替换端口
+        "action": "openExternally", // 触发浏览器打开
+      }
+    },
+    {
+      "name": "start app_ai",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/app_ai/app_flask.py",
+      "cwd": "${workspaceFolder}/app_ai",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "FLASK_ENV": "development"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "原神启动！",
+      "configurations": [
+        "start app_ai",
+        "start vue"
+      ]
+    }
+  ]
+}

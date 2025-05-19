@@ -136,10 +136,7 @@ def insert_vectors(vectors, image_paths):
     """
     将图像特征向量、文件名和哈希值批量插入到 Milvus 集合中，
     并在插入前检查重复项。
-
-    参数:
-        vectors (list): 包含图像特征向量 (numpy 数组或列表) 的列表。
-        image_paths (list): 包含对应图像文件完整路径的列表。
+    返回插入和跳过的详细信息。
     """
     # 检查输入的向量列表和路径列表长度是否一致
     if len(vectors) != len(image_paths):
@@ -160,6 +157,7 @@ def insert_vectors(vectors, image_paths):
     new_filenames = []  # 存储新的文件名
     new_hashes = []  # 存储新的哈希值
     skipped_count = 0  # 记录跳过的重复图像数量
+    skipped_files = []  # 新增：记录跳过的文件名
 
     # 遍历每个待处理的图像信息
     for i, (embedding, filename, hash_value) in enumerate(
@@ -169,6 +167,7 @@ def insert_vectors(vectors, image_paths):
             # 如果已存在，打印跳过信息并增加计数器
             print(f"跳过已存在的图像: {filename}")
             skipped_count += 1
+            skipped_files.append(filename)  # 新增
         else:
             # 如果是新图像，将其信息添加到待插入列表中
             new_embeddings.append(embedding)
@@ -185,15 +184,26 @@ def insert_vectors(vectors, image_paths):
             new_hashes  # 图像哈希字段数据
         ]
         # 调用 collection.insert() 方法执行插入
-        collection.insert(data_to_insert)
+        mutation_result = collection.insert(data_to_insert)
         # 调用 collection.flush() 确保数据写入 Milvus (对于非 auto-flush 的集合是必要的)
         collection.flush()
         # 打印成功插入的信息和当前集合的总实体数
         print(f"成功插入 {len(new_embeddings)} 个新特征向量（跳过 {skipped_count} 个已存在图像）")
+        print(f"插入的实体ID: {mutation_result.primary_keys}")
         print(f"集合当前总数：{collection.num_entities}")
+        return {
+            "inserted": new_filenames,
+            "skipped": skipped_files,
+            "skipped_count": skipped_count
+        }
     else:
         # 如果没有新图像需要插入，打印提示信息
         print(f"未插入任何新向量，所有 {skipped_count} 个图像已存在")
+        return {
+            "inserted": [],
+            "skipped": skipped_files,
+            "skipped_count": skipped_count
+        }
 
 
 # --- 主程序入口 ---
